@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "pairs": [
+      "EURUSD",
+      "GBPUSD",
+      "USDJPY",
+      "USDCHF",
+      "USDCAD",
+      "AUDUSD",
+      "NZDUSD",
+      "EURJPY"
+    ],
+    "log_returns_shape": [
+      8,
+      79999
+    ],
+    "market_shape": [
+      4096,
+      8,
+      256
+    ],
+    "date_start": "2012-09-28 03:00:00",
+    "date_end": "2025-12-05 16:00:00",
+    "total_env_steps": 1048576,
+    "dataset_load_seconds": 0.019232402999477927,
+    "loaded_from_cache": true,
+    "cache_root": "data_cache/h1_major8-a23b37d351e693cf",
+    "asset_leverage": 30.0,
+    "long_margin_requirement": 0.03333333333333333,
+    "short_margin_requirement": 0.03333333333333333,
+    "margin_call_ratio": 1.0
+  },
+  "cpu_python_numpy": {
+    "seconds": 15.960397112999999,
+    "mean_balance": 9438.4609375,
+    "final_terminated_count": 4096,
+    "margin_call_count": 0,
+    "mean_margin_used": 287.84454345703125,
+    "env_steps_per_second": 65698.6159289181
+  },
+  "gpu_cuda_vectorized": {
+    "seconds": 0.008888611000656965,
+    "mean_balance": 9438.46484375,
+    "final_terminated_count": 4096,
+    "margin_call_count": 0,
+    "mean_margin_used": 287.8446044921875,
+    "env_steps_per_second": 117968487.98113662
+  },
+  "speedup": 1795.6008100501138,
+  "mean_balance_abs_diff": 0.00390625
+}

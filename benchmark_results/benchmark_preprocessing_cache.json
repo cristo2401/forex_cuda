@@ -1,0 +1,27 @@
+{
+  "pairs": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "USDCHF",
+    "USDCAD",
+    "AUDUSD",
+    "NZDUSD",
+    "EURJPY"
+  ],
+  "log_returns_shape": [
+    8,
+    79999
+  ],
+  "close_prices_shape": [
+    80000,
+    8
+  ],
+  "date_start": "2012-09-28 03:00:00",
+  "date_end": "2025-12-05 16:00:00",
+  "cache_root": "data_cache/h1_major8-a23b37d351e693cf",
+  "parquet_build_seconds": 0.20744857500085345,
+  "cache_load_seconds": 0.008057054999881075,
+  "speedup": 25.747444321022442,
+  "cache_loaded_from_cache": true
+}
