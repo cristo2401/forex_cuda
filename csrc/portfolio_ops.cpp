@@ -90,12 +90,16 @@ void step_inplace(
     TORCH_CHECK(spread_bps.dim() == 1 && spread_bps.size(0) == num_envs, "spread_bps must have shape [num_envs]");
     TORCH_CHECK(slippage_bps.dim() == 1 && slippage_bps.size(0) == num_envs, "slippage_bps must have shape [num_envs]");
     TORCH_CHECK(
-        long_margin_requirement.dim() == 1 && long_margin_requirement.size(0) == num_assets,
-        "long_margin_requirement must have shape [num_assets]"
+        long_margin_requirement.dim() == 2
+            && long_margin_requirement.size(0) == num_envs
+            && long_margin_requirement.size(1) == num_assets,
+        "long_margin_requirement must have shape [num_envs, num_assets]"
     );
     TORCH_CHECK(
-        short_margin_requirement.dim() == 1 && short_margin_requirement.size(0) == num_assets,
-        "short_margin_requirement must have shape [num_assets]"
+        short_margin_requirement.dim() == 2
+            && short_margin_requirement.size(0) == num_envs
+            && short_margin_requirement.size(1) == num_assets,
+        "short_margin_requirement must have shape [num_envs, num_assets]"
     );
     TORCH_CHECK(rewards.dim() == 1 && rewards.size(0) == num_envs, "rewards must have shape [num_envs]");
     TORCH_CHECK(terminated.dim() == 1 && terminated.size(0) == num_envs, "terminated must have shape [num_envs]");

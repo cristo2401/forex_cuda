@@ -227,7 +227,15 @@ def make_cost_tensors(*, num_envs: int, config, device) -> CostTensors:
     return reset_cost_tensors(costs, config)
 
 
-def assign_margin_requirement_tensor(name: str, destination, value, *, num_assets: int, device):
+def assign_margin_requirement_tensor(
+    name: str,
+    destination,
+    value,
+    *,
+    num_envs: int,
+    num_assets: int,
+    device,
+):
     torch = _torch()
     if isinstance(value, (int, float)):
         if value <= 0:
@@ -236,11 +244,20 @@ def assign_margin_requirement_tensor(name: str, destination, value, *, num_asset
         return destination
 
     source = torch.as_tensor(value, dtype=torch.float32, device=device)
-    if source.shape != (num_assets,):
-        raise ValueError(f"{name} must be a scalar or have shape [{num_assets}]")
     if not bool(torch.all(source > 0).item()):
         raise ValueError(f"{name} values must be positive")
-    destination.copy_(source.contiguous())
+
+    if source.shape == (num_assets,):
+        destination.copy_(source.unsqueeze(0).expand(num_envs, -1).contiguous())
+        return destination
+    if source.shape == (num_envs, num_assets):
+        destination.copy_(source.contiguous())
+        return destination
+
+    raise ValueError(
+        f"{name} must be a scalar, have shape [{num_assets}], "
+        f"or have shape [{num_envs}, {num_assets}]"
+    )
     return destination
 
 
@@ -250,6 +267,7 @@ def assign_margin_requirement_from_leverage(
     short_destination,
     value,
     *,
+    num_envs: int,
     num_assets: int,
     device,
 ) -> BrokerTensors:
@@ -259,17 +277,23 @@ def assign_margin_requirement_from_leverage(
         if float(leverage.item()) <= 0:
             raise ValueError(f"{name} must be positive")
         margin_requirement = torch.full(
-            (num_assets,),
+            (num_envs, num_assets),
             1.0 / float(leverage.item()),
             dtype=torch.float32,
             device=device,
         )
     else:
-        if leverage.shape != (num_assets,):
-            raise ValueError(f"{name} must be a scalar or have shape [{num_assets}]")
         if not bool(torch.all(leverage > 0).item()):
             raise ValueError(f"{name} values must be positive")
-        margin_requirement = (1.0 / leverage).contiguous()
+        if leverage.shape == (num_assets,):
+            margin_requirement = (1.0 / leverage).unsqueeze(0).expand(num_envs, -1).contiguous()
+        elif leverage.shape == (num_envs, num_assets):
+            margin_requirement = (1.0 / leverage).contiguous()
+        else:
+            raise ValueError(
+                f"{name} must be a scalar, have shape [{num_assets}], "
+                f"or have shape [{num_envs}, {num_assets}]"
+            )
 
     long_destination.copy_(margin_requirement)
     short_destination.copy_(margin_requirement)
@@ -279,13 +303,21 @@ def assign_margin_requirement_from_leverage(
     )
 
 
-def reset_broker_tensors(broker: BrokerTensors, config, *, num_assets: int, device) -> BrokerTensors:
+def reset_broker_tensors(
+    broker: BrokerTensors,
+    config,
+    *,
+    num_envs: int,
+    num_assets: int,
+    device,
+) -> BrokerTensors:
     if config.margin_requirement is None:
         assign_margin_requirement_from_leverage(
             "asset_leverage",
             broker.long_margin_requirement,
             broker.short_margin_requirement,
             config.asset_leverage,
+            num_envs=num_envs,
             num_assets=num_assets,
             device=device,
         )
@@ -294,6 +326,7 @@ def reset_broker_tensors(broker: BrokerTensors, config, *, num_assets: int, devi
             "margin_requirement",
             broker.long_margin_requirement,
             config.margin_requirement,
+            num_envs=num_envs,
             num_assets=num_assets,
             device=device,
         )
@@ -304,6 +337,7 @@ def reset_broker_tensors(broker: BrokerTensors, config, *, num_assets: int, devi
             "long_margin_requirement",
             broker.long_margin_requirement,
             config.long_margin_requirement,
+            num_envs=num_envs,
             num_assets=num_assets,
             device=device,
         )
@@ -312,21 +346,24 @@ def reset_broker_tensors(broker: BrokerTensors, config, *, num_assets: int, devi
             "short_margin_requirement",
             broker.short_margin_requirement,
             config.short_margin_requirement,
+            num_envs=num_envs,
             num_assets=num_assets,
             device=device,
         )
     return broker
 
 
-def make_broker_tensors(*, num_assets: int, config, device) -> BrokerTensors:
+def make_broker_tensors(*, num_envs: int, num_assets: int, config, device) -> BrokerTensors:
     torch = _torch()
     broker = BrokerTensors(
         long_margin_requirement=torch.empty(
+            num_envs,
             num_assets,
             dtype=torch.float32,
             device=device,
         ).contiguous(),
         short_margin_requirement=torch.empty(
+            num_envs,
             num_assets,
             dtype=torch.float32,
             device=device,
@@ -335,6 +372,7 @@ def make_broker_tensors(*, num_assets: int, config, device) -> BrokerTensors:
     return reset_broker_tensors(
         broker,
         config,
+        num_envs=num_envs,
         num_assets=num_assets,
         device=device,
     )

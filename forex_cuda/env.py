@@ -35,7 +35,7 @@ class CuPortfolioEnv(gym.Env if gym is not None else object):
     - balances/free_cash/time_indices: [num_envs] contiguous CUDA tensors.
     - positions/actions: [num_envs, num_assets] float32 CUDA contiguous target weights.
     - commission/spread/slippage: [num_envs] float32 CUDA contiguous cost tensors.
-    - long/short_margin_requirement: [num_assets] float32 CUDA contiguous margin rules.
+    - long/short_margin_requirement: [num_envs, num_assets] float32 CUDA contiguous margin rules.
     """
 
     metadata = {"render_modes": []}
@@ -67,6 +67,7 @@ class CuPortfolioEnv(gym.Env if gym is not None else object):
             device=self.device,
         )
         self.broker = make_broker_tensors(
+            num_envs=self.num_envs,
             num_assets=self.num_assets,
             config=self.config,
             device=self.device,
@@ -118,7 +119,7 @@ class CuPortfolioEnv(gym.Env if gym is not None else object):
             "market_shape": tuple(self.market.shape),
             "device": str(self.device),
             "cost_shape": (self.num_envs,),
-            "margin_requirement_shape": (self.num_assets,),
+            "margin_requirement_shape": (self.num_envs, self.num_assets),
             "options": options or {},
         }
         return self.state.observation(), info
@@ -129,6 +130,7 @@ class CuPortfolioEnv(gym.Env if gym is not None else object):
             self.broker.long_margin_requirement,
             self.broker.short_margin_requirement,
             asset_leverage,
+            num_envs=self.num_envs,
             num_assets=self.num_assets,
             device=self.device,
         )
@@ -145,6 +147,7 @@ class CuPortfolioEnv(gym.Env if gym is not None else object):
                 "margin_requirement",
                 self.broker.long_margin_requirement,
                 margin_requirement,
+                num_envs=self.num_envs,
                 num_assets=self.num_assets,
                 device=self.device,
             )
@@ -156,6 +159,7 @@ class CuPortfolioEnv(gym.Env if gym is not None else object):
                 "long_margin_requirement",
                 self.broker.long_margin_requirement,
                 long_margin_requirement,
+                num_envs=self.num_envs,
                 num_assets=self.num_assets,
                 device=self.device,
             )
@@ -164,6 +168,7 @@ class CuPortfolioEnv(gym.Env if gym is not None else object):
                 "short_margin_requirement",
                 self.broker.short_margin_requirement,
                 short_margin_requirement,
+                num_envs=self.num_envs,
                 num_assets=self.num_assets,
                 device=self.device,
             )
