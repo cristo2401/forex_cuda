@@ -2,6 +2,14 @@
 
 Vectorized CUDA environment for FX portfolio simulations with PyTorch tensors and a Gymnasium-style Python API.
 
+[![CPU math checks](https://github.com/cristo2401/forex_cuda/actions/workflows/cpu-math.yml/badge.svg)](https://github.com/cristo2401/forex_cuda/actions/workflows/cpu-math.yml)
+
+**Start here:** [run a CPU check](#check-the-math-without-a-gpu) · [install CUDA/PyTorch](docs/setup_cuda.md) · [benchmark scope](docs/BENCHMARKS.md) · [dataset format](docs/dataset_format.md).
+
+The project explores how to keep many independent portfolio simulations on the
+GPU and expose them through Python. It is a simulation component for research;
+it does not provide a trained strategy or evidence of trading profitability.
+
 > Research software only. This is not financial advice or a live-trading system.
 
 ## Highlights
@@ -11,7 +19,22 @@ Vectorized CUDA environment for FX portfolio simulations with PyTorch tensors an
 - Multi-asset portfolio actions with per-environment transaction costs.
 - Long/short margin requirements per asset and CUDA-side margin calls.
 - Cacheable parquet preprocessing for real H1 FX datasets.
-- Benchmarked at more than 100M real-data env-steps/sec on an RTX 3070.
+- A stored H1-data run reports 117.97M env-steps/sec for the timed simulation loop;
+  see the [baseline, excluded work and reproducibility limits](docs/BENCHMARKS.md).
+
+## Check the math without a GPU
+
+Requires a C++17 compiler and Bash; Python, PyTorch and market data are not needed.
+
+```bash
+git clone https://github.com/cristo2401/forex_cuda.git
+cd forex_cuda
+bash scripts/run_cpp_math_test.sh
+```
+
+Expected output: `portfolio_math tests passed`. These checks cover two deterministic
+fixtures for exposure, turnover, costs, margin, equity and reward. CI runs this
+CPU check. It does not compile CUDA or establish full CPU/GPU numerical equivalence.
 
 ## Tensor Contract
 
@@ -79,7 +102,7 @@ actions = torch.empty(4096, 8, device="cuda").uniform_(-0.25, 0.25)
 obs, rewards, terminated, truncated, info = env.step(actions)
 ```
 
-For production fine-tuning, freeze costs to measured broker conditions:
+For controlled simulation experiments, set explicit cost and margin assumptions:
 
 ```python
 env.set_costs(

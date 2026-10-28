@@ -7,7 +7,8 @@
 namespace {
 
 void expect_close(const char* name, float actual, float expected, float tolerance) {
-    if (std::fabs(actual - expected) > tolerance) {
+    if (!std::isfinite(actual) || !std::isfinite(expected) ||
+        std::fabs(actual - expected) > tolerance) {
         std::cerr << name << " mismatch: actual=" << actual
                   << " expected=" << expected
                   << " tolerance=" << tolerance << '\n';
